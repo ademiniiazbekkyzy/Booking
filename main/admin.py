@@ -1,16 +1,21 @@
 from django.contrib import admin
-from .models import *
-# Register your models here.
 
+from main.models import *
 
-class PostImageInline(admin.TabularInline):
-    model = PostImage
-    max_num = 10
-    min_num = 1
-
-
-@admin.register(Post)
-class PostAdmin(admin.ModelAdmin):
-    inlines = [PostImageInline, ]
 
 admin.site.register(Category)
+admin.site.register(Reservation)
+admin.site.register(HotelsIk)
+
+
+class ImageInAdmin(admin.TabularInline):
+    model = ElementImage
+    fields = ('image', )
+    max_num = 5
+
+
+@admin.register(Element)
+class ProductAdmin(admin.ModelAdmin):
+    inlines = [
+        ImageInAdmin
+    ]
