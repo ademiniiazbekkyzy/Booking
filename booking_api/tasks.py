@@ -17,7 +17,7 @@ def send_mail_message(code, email, status):
         send_mail(
             'From django project',
             link,
-            'bekbol.2019@gmail.com',
+            'ademi.niiazbekkyzy@gmail.com',
             [email]
         )
     elif status == 'reset_password':
@@ -31,6 +31,6 @@ def send_mail_message(code, email, status):
         send_mail(
             'From django project',
             link,
-            'bekbol.2019@gmail.com',
+            'ademi.niiazbekkyzy@gmail.com',
             [email]
         )

@@ -23,7 +23,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 schema_view = get_schema_view(
     openapi.Info(
-        title='Python18 Hotel project',
+        title='Booking project',
         description='Бронь отелей',
         default_version='v1',
     ),

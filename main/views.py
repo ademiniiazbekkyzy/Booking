@@ -1,9 +1,12 @@
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status
+from django.shortcuts import get_object_or_404
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly
+
+from rest_framework import status, permissions, generics
 from rest_framework.decorators import action, api_view
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import CreateAPIView, ListAPIView, ListCreateAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, ListCreateAPIView, RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,14 +15,16 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
 # from main.filter import ProductFilter
+from account.views import CustomView
 from main.models import *
 # from main.sendmessage import sendTelegram
+from main.permissions import IsAdminOrReadOnly
 from main.serializers import *
 # from applications.review.models import Like, Rating
 # from applications.review.serializers import RatingSerializer
 # from parser import main
 
-from main.models import HotelsIk
+# from main.models import HotelsIk
 
 
 class LargeResultsSetPagination(PageNumberPagination):
@@ -31,35 +36,39 @@ class LargeResultsSetPagination(PageNumberPagination):
     max_page_size = 100
 
 
-class ElementViewSet(ModelViewSet):
+class ElementAPIList(generics.ListCreateAPIView):
     """
     Представление отелей
     """
     queryset = Element.objects.all()
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     serializer_class = ElementSerializer
 
     # pagination_class = LargeResultsSetPagination
-    # filter_backends = [DjangoFilterBackend, SearchFilter]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     # filterset_class = ProductFilter
     search_fields = ['title', 'description']
 
-    def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            permissions = []
-        elif self.action == 'rating':
-            permissions = [IsAuthenticated]
-        else:
-            permissions = [IsAuthenticated]
-        return [permission() for permission in permissions]
 
-    @action(methods=['POST'], detail=True)
-    def recomendation(self, request, pk):
-        element_id = Element.objects.get(id=pk)
-        category_of_element = element_id.category
-        recomendation_element = Element.objects.filter(category=category_of_element)
-        serializer = ElementSerializer(recomendation_element, many=True)
+    # def get_permissions(self):
+    #     if self.action in ['list', 'retrieve']:
+    #         permissions = []
+    #     elif self.action == 'rating':
+    #         permissions = [IsAuthenticated]
+    #     else:
+    #         permissions = [IsAuthenticated]
+    #     return [permission() for permission in permissions]
 
-        return Response(serializer.data)
+
+
+    # @action(methods=['POST'], detail=True)
+    # def recomendation(self, request, pk):
+    #     element_id = Element.objects.get(id=pk)
+    #     category_of_element = element_id.category
+    #     recomendation_element = Element.objects.filter(category=category_of_element)
+    #     serializer = ElementSerializer(recomendation_element, many=True)
+    #
+    #     return Response(serializer.data)
 
     # @action(methods=['POST'], detail=True)
     # def like(self, request, pk):
@@ -90,6 +99,18 @@ class ElementViewSet(ModelViewSet):
     #     serializer.save(user=self.request.user)
 
 
+class ElementAPIUpdate(generics.RetrieveUpdateAPIView):
+    queryset = Element.objects.all()
+    serializer_class = ElementSerializer
+    # permission_classes = [IsAdminOrReadOnly]
+
+
+class ElementDestroy(generics.RetrieveDestroyAPIView):
+    queryset = Element.objects.all()
+    serializer_class = ElementSerializer
+    # permission_classes = [IsAdminOrReadOnly]
+
+
 class Favourite(ListCreateAPIView):
     """
     Представление избранных
@@ -112,6 +133,7 @@ class ReservationView(CreateAPIView):
     """
     Представление бронировании отелей
     """
+    permission_classes = (IsAuthenticated,)
     queryset = Reservation.objects.all()
     serializer_class = ReservationSerializer
 
@@ -136,17 +158,42 @@ class ReservationHistory(ListAPIView):
         return queryset
 
 
-# @api_view(['GET'])
-# def create_hotel_view(request):
-#     """
-#     Представление парсинга
-#     """
-#     hotels = main()
-#     for i in hotels:
-#         title = i.get('title')
-#         rating = i.get('rating')
-#         ratingcount = i.get('ratingcount')
-#         image = i.get('image')
-#
-#         HotelsIk.objects.create(title=title, ratingcount=ratingcount, rating=rating, image=image)
-#     return Response(hotels)
+class CheckoutView(APIView):
+    def post(self, request):
+        element = get_object_or_404(Element, pk=request.data['pk'])
+        checked_in_element = CheckIn.objects.get(element__pk=request.data['pk'])
+        print(checked_in_element)
+        element.is_booked = False
+        element.save()
+        checked_in_element.delete()
+        return Response({"Checkout Successful"}, status=status.HTTP_200_OK)
+
+
+class CheckedInView(ListAPIView):
+    permission_classes = (IsAdminUser, )
+    serializer_class = CheckinSerializer
+    queryset = CheckIn.objects.order_by('-id')
+
+
+
+class Review(CreateAPIView):
+    """
+    Представление отзывов
+    """
+    queryset = Comment.objects.all()
+    serializer_class = ReviewSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class DetailReview(RetrieveAPIView):
+    """
+    Представление для детального отзыва с отзывами
+    """
+    serializer_class = RetriveReviewSerializer
+    queryset = Element.objects.all()
+
+
+
+
