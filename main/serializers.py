@@ -7,7 +7,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from account.send_mail import mail_message
-from main.models import Element, ElementImage, FavouriteElement, Reservation, CheckIn, Comment
+from main.models import Element, ElementImage, Reservation, CheckIn, Comment
 import requests
 # from main.sendmessage import sendTelegram
 # from telebot.models import TeleSettings
@@ -30,15 +30,6 @@ class ImageSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# class CategorySerializer(serializers.ModelSerializer):
-#     """
-#     Сериализатор категорий
-#     """
-#     class Meta:
-#         model = Category
-#         fields = '__all__'
-
-
 class ElementSerializer(serializers.ModelSerializer):
     """
     Сериализатор площадок
@@ -59,45 +50,6 @@ class ElementSerializer(serializers.ModelSerializer):
             ElementImage.objects.create(element=element, image=image)
         return element
 
-    # def to_representation(self, instance):
-    #     representation = super().to_representation(instance)
-        # representation['like'] = instance.like.filter(like=True).count()
-        # representation['reviews'] = instance.comment.count()
-
-        # rating_result = 0
-        # for i in instance.rating.all():
-        #     rating_result += int(i.rating)
-        #
-        # if instance.rating.all().count() == 0:
-        #     representation['rating'] = rating_result
-        #
-        # else:
-        #     representation[' rating'] = rating_result / instance.rating.all().count
-        #
-        # return representation
-
-
-class FavouriteElementSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор избранных
-    """
-
-    user = serializers.ReadOnlyField(source='user.email')
-
-    class Meta:
-        model = FavouriteElement
-        fields = '__all__'
-
-    def create(self, validated_data):
-        request = self.context.get('request')
-        user = request.user
-        product = validated_data.get('product')
-
-        if FavouriteElement.objects.filter(user=user, product=product):
-            return FavouriteElement.objects.get(user=user, product=product)
-        else:
-            return FavouriteElement.objects.create(user=user, product=product)
-
 
 class ReservationSerializer(serializers.ModelSerializer):
     """
@@ -105,6 +57,19 @@ class ReservationSerializer(serializers.ModelSerializer):
     """
     # user = serializers.ReadOnlyField(source='user.email')
 
+    class Meta:
+        model = Reservation
+        fields = '__all__'
+
+class CommentSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'body', 'user', 'element')
+
+
+class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservation
         fields = '__all__'
@@ -118,31 +83,24 @@ class CheckinSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CheckIn
-        fields = ('phone_number', 'email', 'user_id', 'user_name', 'element_id', 'element_slug',)
+        fields = ('phone', 'email', 'user_id', 'user_name', 'element_id', 'element_slug',)
 
 
-class ReviewSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор отзывов
-    """
-    user = serializers.ReadOnlyField(source='user.email')
+# class EntrySerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Entry
+#         exclude = ['user']
+#
+#     def create(self, validated_data):
+#         validated_data['user'] = self.context.get('request').user
+#         return super().create(validated_data)
+#
+#     def to_representation(self, instance):
+#         rep = super().to_representation(instance)
+#         rep["user"] = instance.user.email
+#         return rep
 
-    class Meta:
-        model = Comment
-        fields = '__all__'
 
 
-class RetriveReviewSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор для детального отзыва
-    """
-    class Meta:
-        model = Element
-        fields = '__all__'
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation['review'] = ReviewSerializer(instance.comment.all(), many=True).data
-        return representation
 
-# TODO dqw

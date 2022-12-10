@@ -1,9 +1,8 @@
-from django.shortcuts import render
+# from django.shortcuts import
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly
-
-from rest_framework import status, permissions, generics
+from rest_framework import status, permissions, generics, mixins
 from rest_framework.decorators import action, api_view
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import CreateAPIView, ListAPIView, ListCreateAPIView, RetrieveAPIView
@@ -12,19 +11,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
-
-# from main.filter import ProductFilter
-from account.views import CustomView
-from main.models import *
-# from main.sendmessage import sendTelegram
-from main.permissions import IsAdminOrReadOnly
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
+# from .tasks import entry_created
+from main.permissions import IsAdminOrReadOnly, IsAuthor
 from main.serializers import *
-# from applications.review.models import Like, Rating
-# from applications.review.serializers import RatingSerializer
-# from parser import main
-
-# from main.models import HotelsIk
 
 
 class LargeResultsSetPagination(PageNumberPagination):
@@ -46,57 +36,7 @@ class ElementAPIList(generics.ListCreateAPIView):
 
     # pagination_class = LargeResultsSetPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    # filterset_class = ProductFilter
     search_fields = ['title', 'description']
-
-
-    # def get_permissions(self):
-    #     if self.action in ['list', 'retrieve']:
-    #         permissions = []
-    #     elif self.action == 'rating':
-    #         permissions = [IsAuthenticated]
-    #     else:
-    #         permissions = [IsAuthenticated]
-    #     return [permission() for permission in permissions]
-
-
-
-    # @action(methods=['POST'], detail=True)
-    # def recomendation(self, request, pk):
-    #     element_id = Element.objects.get(id=pk)
-    #     category_of_element = element_id.category
-    #     recomendation_element = Element.objects.filter(category=category_of_element)
-    #     serializer = ElementSerializer(recomendation_element, many=True)
-    #
-    #     return Response(serializer.data)
-
-    # @action(methods=['POST'], detail=True)
-    # def like(self, request, pk):
-    #     element = self.get_object()
-    #     like_obj, _ = Like.objects.get_or_create(element=element, user=request.user)
-    #     print(like_obj)
-    #     like_obj.like = not like_obj.like
-    #     like_obj.save()
-    #     status = 'liked'
-    #     if not like_obj.like:
-    #         status = 'unliked'
-    #     return Response({'status': status})
-
-    # @action(methods=['POST'], detail=True)
-    # def rating(self, request, pk):
-    #     serializer = RatingSerializer(data=request.data)
-    #     serializer.is_valid(raise_exception=True)
-    #     try:
-    #         obj = Rating.objects.get(element=self.get_object(), user=request.user)
-    #         obj.rating = request.data['rating']
-    #     except Rating.DoesNotExist:
-    #         obj = Rating(user=request.user, element=self.get_object(), rating=request.data['rating'])
-    #
-    #     obj.save()
-    #     return Response(request.data, status=status.HTTP_201_CREATED)
-    #
-    # def perform_create(self, serializer):
-    #     serializer.save(user=self.request.user)
 
 
 class ElementAPIUpdate(generics.RetrieveUpdateAPIView):
@@ -110,23 +50,6 @@ class ElementDestroy(generics.RetrieveDestroyAPIView):
     serializer_class = ElementSerializer
     # permission_classes = [IsAdminOrReadOnly]
 
-
-class Favourite(ListCreateAPIView):
-    """
-    Представление избранных
-    """
-    queryset = FavouriteElement.objects.all()
-    serializer_class = FavouriteElementSerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        queryset = super().get_queryset()
-        queryset = queryset.filter(user=user)
-        return queryset
-
-    def perform_create(self, serializer):
-        # print('\n\n', self.request.data, '\n\n')
-        serializer.save(user=self.request.user)
 
 
 class ReservationView(CreateAPIView):
@@ -175,25 +98,106 @@ class CheckedInView(ListAPIView):
     queryset = CheckIn.objects.order_by('-id')
 
 
-
-class Review(CreateAPIView):
-    """
-    Представление отзывов
-    """
+class CommentListCreateView(generics.ListCreateAPIView):
     queryset = Comment.objects.all()
-    serializer_class = ReviewSerializer
+    serializer_class = CommentSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
 
-class DetailReview(RetrieveAPIView):
-    """
-    Представление для детального отзыва с отзывами
-    """
-    serializer_class = RetriveReviewSerializer
-    queryset = Element.objects.all()
+class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
 
+
+# class EntryViewSet(ModelViewSet):
+#     queryset = Entry.objects.all()
+#     serializer_class = EntrySerializer
+#     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthor]
+#
+#     def create(self, request, *args, **kwargs):
+#         r_data = request.data
+#         date = r_data.get("date")
+#         time_slot = r_data.get("time_slot")
+#         element = r_data.get("element")
+#         entries = Entry.objects.filter(element=element)
+#         if entries:
+#             for e in entries:
+#                 if str(e.date) == str(date) and str(e.time_slot) == str(time_slot):
+#                     return Response(
+#                         "This time slot is already booked for this zone. Please choose another time or day")
+#         super().create(request, *args, **kwargs)
+#         entry = Entry.objects.get(date=date, time_slot=time_slot, element=element)
+#         entry_created.delay(entry.id)
+#         return Response("Appointment created")
+#
+#     def update(self, request, *args, **kwargs):
+#         r_data = request.data
+#         date = r_data.get("date")
+#         time_slot = r_data.get("time_slot")
+#         entries = Entry.objects.filter(element=r_data["element"])
+#         if entries:
+#             for e in entries:
+#                 if str(e.date) == str(date):  # and str(e.time_slot) == str(time_slot)
+#                     return Response(
+#                         "This time slot is already booked for this doctor. Please choose another time or day")
+#         return super().update(request, *args, **kwargs)
+#
+#     def get_serializer_context(self):
+#         context = super().get_serializer_context()
+#         context["request"] = self.request
+#         return context
+
+
+class BookingCreateApiView(CreateAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = BookingSerializer
+    queryset = Reservation.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        response = {}
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        response['data'] = serializer.data
+        response['response'] = "Room is successfully booked"
+        return Response(response, status=status.HTTP_201_CREATED, headers=headers)
+
+    def post(self, request, *args, **kwargs):
+        element = get_object_or_404(Element, pk=request.data.get('element'))
+        if element.is_booked:
+            return Response({"response": "Room is already booked"}, status=status.HTTP_200_OK)
+        element.is_booked = True
+        element.save()
+        checked_in_element = CheckIn.objects.create(
+            user=request.user,
+            element=element,
+            phone=request.data.get('phone'),
+            email=request.data['email']
+        )
+        checked_in_element.save()
+        return self.create(request, *args, **kwargs)
+
+
+class CheckoutView(APIView):
+    def post(self, request):
+        element = get_object_or_404(Element, pk=request.data['pk'])
+        checked_in_element = CheckIn.objects.get(element__pk=request.data['pk'])
+        print(checked_in_element)
+        element.is_booked = False
+        element.save()
+        checked_in_element.delete()
+        return Response({"Checkout Successful"}, status=status.HTTP_200_OK)
+
+
+class CheckedInView(ListAPIView):
+    permission_classes = (IsAdminUser, )
+    serializer_class = CheckinSerializer
+    queryset = CheckIn.objects.order_by('-id')
 
 
 

@@ -1,9 +1,5 @@
 import time
-
-from celery import shared_task
 from django.core.mail import send_mail
-
-# @shared_task
 from .celery import app
 
 
@@ -34,3 +30,5 @@ def send_mail_message(code, email, status):
             'ademi.niiazbekkyzy@gmail.com',
             [email]
         )
+
+

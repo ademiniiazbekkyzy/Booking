@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import os
 from pathlib import Path
-from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -133,7 +132,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATIC_URL = 'static/'
-# STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 
 MEDIA_URL = '/media/'
@@ -143,7 +142,7 @@ AUTH_USER_MODEL = 'account.MyUser'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587                             ##########
+EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_PASSWORD = 'sylarukzxtotjxyx'
 EMAIL_HOST_USER = 'ademi.niiazbekkyzy@gmail.com'
@@ -152,9 +151,6 @@ EMAIL_HOST_USER = 'ademi.niiazbekkyzy@gmail.com'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 
 REDIS_HOST = '127.0.0.1'
