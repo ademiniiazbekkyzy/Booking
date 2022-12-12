@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-^c*x2)#^(w-*7ndnb8@7tdycc%+%5(%ho3^q-lslk9g4ok$bz(
 DEBUG = True
 
 # ALLOWED_HOSTS = ['206.81.15.182']
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['143.198.150.12', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -161,6 +161,7 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 
 
 REST_FRAMEWORK = {
+    'DATETIME_FORMAT': "%H:%M:%S %d.%m.%Y",
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ]

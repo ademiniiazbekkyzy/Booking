@@ -7,7 +7,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from account.send_mail import mail_message
-from main.models import Element, ElementImage, Reservation, CheckIn, Comment
+from main.models import Element, ElementImage, Comment, Booking
 import requests
 # from main.sendmessage import sendTelegram
 # from telebot.models import TeleSettings
@@ -50,57 +50,92 @@ class ElementSerializer(serializers.ModelSerializer):
             ElementImage.objects.create(element=element, image=image)
         return element
 
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep["comment"] = CommentSerializer(instance.comment.all(), many=True).data
+        rep['reviews'] = instance.comment.count()
+        return rep
 
-class ReservationSerializer(serializers.ModelSerializer):
+
+# class CommentSerializer(serializers.ModelSerializer):
+#     user = serializers.ReadOnlyField(source='user.username')
+#     # user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+#
+#     class Meta:
+#         model = Comment
+#         fields = ('id', 'body', 'user', 'element')
+
+
+class ReviewSerializer(serializers.ModelSerializer):
     """
-    Сериализатор бронирования площадок
+    Сериализатор отзывов
     """
-    # user = serializers.ReadOnlyField(source='user.email')
-
-    class Meta:
-        model = Reservation
-        fields = '__all__'
-
-class CommentSerializer(serializers.ModelSerializer):
-    user = serializers.ReadOnlyField(source='user.username')
+    user = serializers.ReadOnlyField(source='user.email')
 
     class Meta:
         model = Comment
-        fields = ('id', 'body', 'user', 'element')
-
-
-class BookingSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Reservation
         fields = '__all__'
 
 
-class CheckinSerializer(serializers.ModelSerializer):
-    element_id = serializers.IntegerField(source='element.pk', default=datetime.now)
-    element_slug = serializers.SlugField(source='element.element_slug', default=datetime.now)
-    user_id = serializers.IntegerField(source='user.pk')
-    user_name = serializers.CharField(source='user.username')
-
+class RetriveReviewSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для детального отзыва
+    """
     class Meta:
-        model = CheckIn
-        fields = ('phone', 'email', 'user_id', 'user_name', 'element_id', 'element_slug',)
+        model = Element
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['review'] = ReviewSerializer(instance.comment.all(), many=True).data
+        return representation
 
 
-# class EntrySerializer(serializers.ModelSerializer):
+# class BookingSerializer(serializers.ModelSerializer):
 #     class Meta:
-#         model = Entry
-#         exclude = ['user']
+#         model = Reservation
+#         fields = '__all__'
 #
-#     def create(self, validated_data):
-#         validated_data['user'] = self.context.get('request').user
-#         return super().create(validated_data)
 #
-#     def to_representation(self, instance):
-#         rep = super().to_representation(instance)
-#         rep["user"] = instance.user.email
-#         return rep
+# class CheckinSerializer(serializers.ModelSerializer):
+#     element_id = serializers.IntegerField(source='element.pk', default=datetime.now)
+#     element_slug = serializers.SlugField(source='element.element_slug', default=datetime.now)
+#     user_id = serializers.IntegerField(source='user.pk')
+#     user_name = serializers.CharField(source='user.username')
+#
+#     class Meta:
+#         model = CheckIn
+#         fields = ('phone', 'email', 'user_id', 'user_name', 'element_id', 'element_slug',)
 
 
+class EntrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        exclude = ['user']
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context.get('request').user
+        return super().create(validated_data)
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep["user"] = instance.user.email
+        return rep
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        exclude = ['user']
+
+    def create(self, validated_data):
+        validated_data["user"] = self.context.get("request").user
+        return super().create(validated_data)
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep["user"] = instance.user.username
+        return rep
 
 
 
