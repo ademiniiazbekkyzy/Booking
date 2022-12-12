@@ -15,7 +15,11 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 # ALLOWED_HOSTS = ['206.81.15.182']
+<<<<<<< HEAD
 ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
+=======
+ALLOWED_HOSTS = ['143.198.150.12', 'localhost', '127.0.0.1']
+>>>>>>> ccf47dc (some changes in booking)
 
 
 # Application definition
@@ -152,6 +156,7 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 
 
 REST_FRAMEWORK = {
+    'DATETIME_FORMAT': "%H:%M:%S %d.%m.%Y",
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ]
