@@ -12,14 +12,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 # ALLOWED_HOSTS = ['206.81.15.182']
-<<<<<<< HEAD
+# <<<<<<< HEAD
 ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
-=======
-ALLOWED_HOSTS = ['143.198.150.12', 'localhost', '127.0.0.1']
->>>>>>> ccf47dc (some changes in booking)
+# =======\
+# ALLOWED_HOSTS = ['143.198.150.12', 'localhost', '127.0.0.1']
+# >>>>>>> ccf47dc (some changes in booking)
 
 
 # Application definition
