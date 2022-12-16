@@ -17,8 +17,8 @@ services:
   web:
     build: .
     ports:
-      - "8000:8000"
-    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8000"
+      - "8000:$PORT"
+    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:$PORT"
 #    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:8080 core.wsgi"
     volumes:
       - .:/usr/src/app
