@@ -1,6 +1,21 @@
 version: '3.8'
-
+networks:
+  djangonetwork:
+    driver: bridge
+    
 services:
+  db:
+    container_name: db
+    networks:
+      - djangonetwork
+    web:
+      depends_on:
+        - db
+      links:
+        - db:db
+      networks:
+        - djangonetwork
+
   db:
     image: 'postgres:latest'
     expose:
