@@ -18,6 +18,8 @@ services:
     build: .
     ports:
     - "postgres:5432"
+    # POSTGRES_HOST=localhost
+
     
       # - "8000:8000"
     command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && python manage.py runserver"
@@ -41,3 +43,4 @@ services:
     env_file: .env
     depends_on:
       - postgres
+
