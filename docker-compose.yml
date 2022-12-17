@@ -8,6 +8,8 @@ services:
     volumes:
       - ./pgdata:/var/lib/postgresql/data/
     env_file: .env
+    ports: 
+      - "postgres:5432"
 
   redis:
     image: redis:alpine
@@ -17,10 +19,7 @@ services:
   web:
     build: .
     ports:
-    - "postgres:5432"
     # POSTGRES_HOST=localhost
-
-    
       # - "8000:8000"
     command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && python manage.py runserver"
     # command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8000"
