@@ -16,9 +16,10 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 # ALLOWED_HOSTS = ['206.81.15.182']
 # <<<<<<< HEAD
-ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
+# ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
 # =======\
-# ALLOWED_HOSTS = ['143.198.150.12', 'localhost', '127.0.0.1']
+# ALLOWED_HOSTS = ['143.198.150.12', 'localhost', '127.0.0.1','*']
+ALLOWED_HOSTS = ["*"]
 # >>>>>>> ccf47dc (some changes in booking)
 
 
