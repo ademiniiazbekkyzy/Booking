@@ -1,6 +1,18 @@
 version: '3.8'
 
 services:
+  db:
+    image: 'postgres:latest'
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: booking_db
+  aprrka:
+    restart: always
+    build: .    
+    depends_on:
+      - db
   postgres:
     environment:
       - DATABASE_URL=postgres://booking_user:postgres@localhost:5432/booking_db

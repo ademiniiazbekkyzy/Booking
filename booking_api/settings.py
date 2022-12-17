@@ -97,7 +97,7 @@ DATABASES = {
         'NAME': 'booking_db',
         'USER': 'booking_user',
         'PASSWORD': 'postgres',
-        'HOST': 'postgres',
+        'HOST': 'db',
         'PORT': 5432,
     }
 }
