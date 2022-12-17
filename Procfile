@@ -1,0 +1,1 @@
+web: gunicorn booking_api.wsgi --log-file -
