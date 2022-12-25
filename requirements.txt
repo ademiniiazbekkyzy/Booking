@@ -25,3 +25,7 @@ ruamel.yaml.clib==0.2.7
 sqlparse==0.4.3
 uritemplate==4.1.1
 urllib3==1.26.13
+python-decouple==3.4
+django-cors-headers==3.13.0
+celery==5.2.7
+redis==4.3.4

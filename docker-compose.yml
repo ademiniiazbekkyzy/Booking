@@ -1,0 +1,75 @@
+version: '3.8'
+networks:
+  djangonetwork:
+    driver: bridge
+    
+services:
+  db:
+    container_name: db
+    networks:
+      - djangonetwork
+    web:
+      depends_on:
+        - db
+      links:
+        - db:db
+      networks:
+        - djangonetwork
+
+  db:
+    image: 'postgres:latest'
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: booking_db
+  aprrka:
+    restart: always
+    build: .    
+    depends_on:
+      - db
+  postgres:
+    environment:
+      - DATABASE_URL=postgres://booking_user:postgres@localhost:5432/booking_db
+
+    image: postgres:11.16
+    expose:
+      - "5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data/
+    env_file: .env
+    # ports: 
+    #   - "postgres:5432"
+
+  redis:
+    image: redis:alpine
+    expose:
+      - "6379"
+
+  web:
+    build: .
+    ports:
+    # POSTGRES_HOST=localhost
+      # - "8000:8000"
+    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && python manage.py runserver"
+    # command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8000"
+#    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:8080 core.wsgi"
+    volumes:
+      - .:/usr/src/app
+      - ./media:/usr/src/app/media
+      - ./static:/usr/src/app/static
+    env_file: .env
+    depends_on:
+      - postgres
+
+  worker:
+    build: .
+    command: celery -A booking_api worker -l info
+    volumes:
+      - .:/usr/src/app
+      - ./media:/usr/src/app/media
+      - ./static:/usr/src/app/static
+    env_file: .env
+    depends_on:
+      - postgres
+
